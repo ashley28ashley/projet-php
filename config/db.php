@@ -18,10 +18,12 @@ try {
 
 // Constantes du site
 define('SITE_NAME', 'Mon E-Commerce');
-define('SITE_URL', 'http://localhost/ecommerce'); // Modifier selon votre configuration
+define('SITE_URL', 'http://localhost/ecommerce'); 
 
 // Configuration des sessions
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Fonction pour vérifier si l'utilisateur est connecté
 function isLoggedIn() {

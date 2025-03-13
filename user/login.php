@@ -1,4 +1,7 @@
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -15,14 +18,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_message = "Mot de passe incorrect.";
     } else {
         // Connexion réussie
-        session_start();
         $_SESSION["user_id"] = $user["id"];
+        $_SESSION["id_utilisateur"] = $user["id"]; // Pour correspondre au système de panier
         $_SESSION["username"] = $user["username"];
         $_SESSION["user_role"] = $user["role"];
         
-        // Redirection vers la page d'accueil
-        header("Location: ../index.php");
-        exit();
+        // Vérifier s'il y a une redirection en attente
+        if (isset($_SESSION['redirect_after_login'])) {
+            $redirect = $_SESSION['redirect_after_login'];
+            unset($_SESSION['redirect_after_login']); // Nettoyer la session
+            
+            // Si un produit était en attente d'ajout au panier
+            if (isset($_SESSION['produit_a_ajouter'])) {
+                $id_produit = $_SESSION['produit_a_ajouter'];
+                unset($_SESSION['produit_a_ajouter']);
+                header("Location: ajouter_panier.php?id_produit=$id_produit");
+                exit();
+            }
+            
+            header("Location: $redirect");
+            exit();
+        } else {
+            // Redirection par défaut vers la page d'accueil
+            header("Location: ../index.php");
+            exit();
+        }
     }
 }
 ?>
@@ -36,6 +56,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         .error {
             color: red;
+            margin-bottom: 15px;
+        }
+        .message {
+            color: blue;
             margin-bottom: 15px;
         }
         form {
@@ -63,6 +87,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         <?php if (isset($error_message)): ?>
             <div class="error"><?php echo $error_message; ?></div>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="message"><?php echo $_SESSION['message']; ?></div>
+            <?php unset($_SESSION['message']); // Nettoyer le message après affichage ?>
         <?php endif; ?>
         
         <div>
