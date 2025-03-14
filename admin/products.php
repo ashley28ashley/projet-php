@@ -14,10 +14,10 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Ajouter un produit
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_product'])) {
-    $name = $_POST['name'];
+    $nom = $_POST['nom'];
     $description = $_POST['description'];
-    $price = $_POST['price'];
-    
+    $prix = $_POST['prix'];
+
     // Gestion de l'image
     $image = '';
     if ($_FILES['image']['name']) {
@@ -25,8 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_product'])) {
         move_uploaded_file($_FILES['image']['tmp_name'], "../" . $image);
     }
 
-    $stmt = $conn->prepare("INSERT INTO items (name, description, price, image) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$name, $description, $price, $image]);
+    $stmt = $conn->prepare("INSERT INTO items (nom, description, prix, image) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$nom, $description, $prix, $image]);
 
     header("Location: products.php");
     exit;
@@ -47,9 +47,9 @@ if (isset($_GET['delete'])) {
 
     <!-- Formulaire d'ajout de produit -->
     <form method="POST" enctype="multipart/form-data">
-        <input type="text" name="name" placeholder="Nom du produit" required><br>
+        <input type="text" name="nom" placeholder="Nom du produit" required><br>
         <textarea name="description" placeholder="Description" required></textarea><br>
-        <input type="number" name="price" placeholder="Prix" required><br>
+        <input type="number" name="prix" placeholder="Prix" required><br>
         <input type="file" name="image"><br>
         <button type="submit" name="add_product">Ajouter Produit</button>
     </form>
@@ -65,10 +65,10 @@ if (isset($_GET['delete'])) {
         </tr>
         <?php foreach ($products as $product): ?>
         <tr>
-            <td><img src="../<?= $product['image'] ?>" width="50"></td>
-            <td><?= $product['name'] ?></td>
-            <td><?= $product['description'] ?></td>
-            <td><?= $product['price'] ?> €</td>
+            <td><img src="../<?= htmlspecialchars($product['image']) ?>" width="50"></td>
+            <td><?= htmlspecialchars($product['nom']) ?></td>
+            <td><?= htmlspecialchars($product['description']) ?></td>
+            <td><?= htmlspecialchars($product['prix']) ?> €</td>
             <td>
                 <a href="edit_product.php?id=<?= $product['id'] ?>">✏ Modifier</a>
                 <a href="products.php?delete=<?= $product['id'] ?>" onclick="return confirm('Supprimer ce produit ?')">❌ Supprimer</a>

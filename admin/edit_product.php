@@ -28,9 +28,10 @@ if (!$product) {
 
 // Mettre à jour le produit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
+    $nom = $_POST['nom'];
     $description = $_POST['description'];
-    $price = $_POST['price'];
+    $prix = $_POST['prix'];
+    $stock = $_POST['stock'];
     $image = $product['image'];
 
     // Gérer le téléchargement d'une nouvelle image
@@ -40,8 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Mise à jour du produit
-    $stmt = $conn->prepare("UPDATE items SET name = ?, description = ?, price = ?, image = ? WHERE id = ?");
-    $stmt->execute([$name, $description, $price, $image, $product_id]);
+    $stmt = $conn->prepare("UPDATE items SET nom = ?, description = ?, prix = ?, stock = ?, image = ? WHERE id = ?");
+    $stmt->execute([$nom, $description, $prix, $stock, $image, $product_id]);
 
     header("Location: products.php");
     exit;
@@ -53,11 +54,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <h2>Modifier le Produit 🛠</h2>
 
     <form method="POST" enctype="multipart/form-data">
-        <input type="text" name="name" value="<?= $product['name'] ?>" required><br>
-        <textarea name="description" required><?= $product['description'] ?></textarea><br>
-        <input type="number" name="price" value="<?= $product['price'] ?>" required><br>
-        <input type="file" name="image"><br>
-        <img src="../<?= $product['image'] ?>" width="100"><br>
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" value="<?= htmlspecialchars($product['nom']) ?>" required><br>
+
+        <label for="description">Description :</label>
+        <textarea id="description" name="description" required><?= htmlspecialchars($product['description']) ?></textarea><br>
+
+        <label for="prix">Prix :</label>
+        <input type="number" id="prix" name="prix" value="<?= htmlspecialchars($product['prix']) ?>" step="0.01" required><br>
+
+        <label for="stock">Stock :</label>
+        <input type="number" id="stock" name="stock" value="<?= htmlspecialchars($product['stock']) ?>" required><br>
+
+        <label for="image">Image :</label>
+        <input type="file" id="image" name="image"><br>
+        <img src="../<?= htmlspecialchars($product['image']) ?>" width="100" alt="Image actuelle"><br>
+
         <button type="submit">Mettre à Jour</button>
     </form>
 

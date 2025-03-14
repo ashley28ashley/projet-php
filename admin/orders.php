@@ -9,10 +9,10 @@ if (!isAdmin()) {
 }
 
 // Récupérer toutes les commandes
-$stmt = $conn->prepare("SELECT orders.id, users.username, orders.order_date, orders.status 
+$stmt = $conn->prepare("SELECT orders.id, users.username, orders.date_commande, orders.status 
                         FROM orders 
-                        JOIN users ON orders.user_id = users.id 
-                        ORDER BY orders.order_date DESC");
+                        JOIN users ON orders.id_user = users.id 
+                        ORDER BY orders.date_commande DESC");
 $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -32,7 +32,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <tr>
             <td><?= $order['id'] ?></td>
             <td><?= htmlspecialchars($order['username']) ?></td>
-            <td><?= $order['order_date'] ?></td>
+            <td><?= $order['date_commande'] ?></td>
             <td>
                 <form method="post" action="update_order.php">
                     <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
