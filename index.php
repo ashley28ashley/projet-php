@@ -2,30 +2,44 @@
 require_once 'config/db.php';
 include 'includes/header.php';
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Mon E-Commerce</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+        .card {
+            background-color: #D7D1FF;
+            margin-bottom: 20px;
+        }
+        .card-img-top {
+            max-width: 100%;
+            height: auto;
+        }
+        .btn-primary {
+            background-color: #5e72e4;
+            border-color: #5e72e4;
+        }
+        .btn-primary:hover {
+            background-color: #4d5bf7;
+            border-color: #4d5bf7;
+        }
+    </style>
+</head>
+<body>
 
 <main class="container">
     <!-- Carrousel avec ajout au panier -->
     <section id="carouselExample" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <img src="assets/images/promo1.jpg" class="d-block w-100" alt="Promo 1">
-                <div class="carousel-caption">
-                    <button class="btn btn-warning add-to-cart" data-id="1" data-name="Fraise" data-price="10" data-image="promo1.jpg">🛒 Ajouter au panier</button>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="assets/images/promo2.jpg" class="d-block w-100" alt="Promo 2">
-                <div class="carousel-caption">
-                    <button class="btn btn-warning add-to-cart" data-id="32" data-name="Promo 2" data-price="15" data-image="promo2.jpg">🛒 Ajouter au panier</button>
-                </div>
-            </div>
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        </button>
+        <!-- ... (le code du carrousel reste inchangé) ... -->
     </section>
 
     <!-- Section de bienvenue -->
@@ -37,31 +51,39 @@ include 'includes/header.php';
 
     <!-- Produits en vedette -->
     <section class="featured-products">
-        <h2>Produits en Vedette</h2>
-        <div class="row">
+        <h2 class="text-center mb-4">Produits en Vedette</h2>
+        <div class="row justify-content-center">
             <?php
-            // Sélectionner uniquement les produits avec ID 1 et 32
-            $stmt = $conn->query("SELECT * FROM items WHERE id IN (1, 32)");
+            $stmt = $conn->query("SELECT * FROM items ");
+            $count = 0;
             while ($produit = $stmt->fetch(PDO::FETCH_ASSOC)) :
+                if ($count % 4 == 0 && $count != 0) {
+                    echo '</div><div class="row justify-content-center">';
+                }
             ?>
-                <div class="col-md-3 mb-4">
-                    <div class="card h-100">
-                        <img src="assets/images/<?= htmlspecialchars($produit['image']) ?>" class="card-img-top" alt="<?= htmlspecialchars($produit['name']) ?>">
-                        <div class="card-body text-center d-flex flex-column">
-                            <h5 class="card-title"><?= htmlspecialchars($produit['name']) ?></h5>
-                            <p class="card-text fw-bold"><?= number_format($produit['price'], 2) ?> €</p>
-                            <a href="pages/produit.php?id=<?= $produit['id'] ?>" class="btn btn-primary">Détails</a>
-                            <button class="btn btn-success mt-2 add-to-cart" 
+                <div class="col-md-3">
+                    <div class="card shadow h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title"><?= htmlspecialchars($produit['nom']) ?></h5>
+                            <?php if (!empty($produit['image'])): ?>
+                                <img src="<?= htmlspecialchars($produit['image']) ?>" class="card-img-top mb-3" alt="<?= htmlspecialchars($produit['nom']) ?>">
+                            <?php endif; ?>
+                            <p class="card-text fw-bold"><?= number_format($produit['prix'], 2) ?> €</p>
+                            <a href="pages/produit.php?id=<?= $produit['id'] ?>" class="btn btn-primary mb-2">Voir plus</a>
+                            <button class="btn btn-success add-to-cart" 
                                 data-id="<?= $produit['id'] ?>" 
-                                data-name="<?= htmlspecialchars($produit['name']) ?>" 
-                                data-price="<?= $produit['price'] ?>" 
+                                data-name="<?= htmlspecialchars($produit['nom']) ?>" 
+                                data-price="<?= $produit['prix'] ?>" 
                                 data-image="<?= htmlspecialchars($produit['image']) ?>">
-                                🛒 Ajouter
+                                🛒 Ajouter au panier
                             </button>
                         </div>
                     </div>
                 </div>
-            <?php endwhile; ?>
+            <?php 
+                $count++;
+                endwhile; 
+            ?>
         </div>
     </section>
 </main>
@@ -70,3 +92,6 @@ include 'includes/header.php';
 <script src="assets/js/panier.js"></script>
 
 <?php include 'includes/footer.php'; ?>
+
+</body>
+</html>

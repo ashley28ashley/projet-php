@@ -12,36 +12,42 @@ if (!isset($_SESSION['id_utilisateur'])) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id_produit'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Requête invalide']);
+// Debugging: Check if POST data is received
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['status' => 'error', 'message' => 'Méthode HTTP non valide']);
+    exit;
+}
+
+if (!isset($_POST['id_item'])) {
+    echo json_encode(['status' => 'error', 'message' => 'Paramètre id_item manquant']);
     exit;
 }
 
 try {
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $id_produit = (int)$_POST['id_produit'];
+    $id_item = (int)$_POST['id_item'];
     $id_utilisateur = (int)$_SESSION['id_utilisateur'];
 
     // Vérification produit existe
     $stmt = $conn->prepare("SELECT id FROM items WHERE id = ?");
-    $stmt->execute([$id_produit]);
+    $stmt->execute([$id_item]);
     if (!$stmt->fetch()) {
         throw new Exception("Produit introuvable");
     }
 
     // Gestion quantité
-    $stmt = $conn->prepare("SELECT quantité FROM panier WHERE id_utilisateur = ? AND id_produit = ?");
-    $stmt->execute([$id_utilisateur, $id_produit]);
+    $stmt = $conn->prepare("SELECT quantité FROM panier WHERE id_utilisateur = ? AND id_item = ?");
+    $stmt->execute([$id_utilisateur, $id_item]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($result) {
         $new_quantite = $result['quantité'] + 1;
-        $stmt = $conn->prepare("UPDATE panier SET quantité = ? WHERE id_utilisateur = ? AND id_produit = ?");
-        $stmt->execute([$new_quantite, $id_utilisateur, $id_produit]);
+        $stmt = $conn->prepare("UPDATE panier SET quantité = ? WHERE id_utilisateur = ? AND id_item = ?");
+        $stmt->execute([$new_quantite, $id_utilisateur, $id_item]);
     } else {
-        $stmt = $conn->prepare("INSERT INTO panier (id_utilisateur, id_produit, quantité) VALUES (?, ?, 1)");
-        $stmt->execute([$id_utilisateur, $id_produit]);
+        $stmt = $conn->prepare("INSERT INTO panier (id_utilisateur, id_item, quantité) VALUES (?, ?, 1)");
+        $stmt->execute([$id_utilisateur, $id_item]);
     }
 
     echo json_encode(['status' => 'success', 'message' => 'Produit ajouté au panier']);
@@ -51,4 +57,5 @@ try {
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+
 ?>

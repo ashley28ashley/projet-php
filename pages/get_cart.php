@@ -2,26 +2,25 @@
 session_start();
 require_once '../config/db.php';
 
-// Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['id_utilisateur'])) {
-    echo json_encode([]);
+    echo json_encode(['status' => 'error', 'message' => 'Utilisateur non connecté']);
     exit;
 }
 
-$id_utilisateur = $_SESSION['id_utilisateur'];
+$id_user = $_SESSION['id_utilisateur'];
 
 try {
     $stmt = $conn->prepare("
-        SELECT p.id_produit, i.name, i.price, i.image, p.quantité 
-        FROM panier p 
-        JOIN items i ON p.id_produit = i.id 
-        WHERE p.id_utilisateur = ?
+        SELECT p.id, p.nom, p.prix, p.image, pa.quantité 
+        FROM panier pa
+        JOIN items p ON pa.id_item = p.id
+        WHERE pa.id_utilisateur = ?
     ");
-    $stmt->execute([$id_utilisateur]);
+    $stmt->execute([$id_user]);
     $panier = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo json_encode($panier);
+
+    echo json_encode(['status' => 'success', 'data' => $panier]);
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Erreur lors de la récupération du panier: ' . $e->getMessage()]);
+    echo json_encode(['status' => 'error', 'message' => 'Erreur: ' . $e->getMessage()]);
 }
+?>

@@ -2,25 +2,25 @@
 session_start();
 require_once '../config/db.php';
 
-if (!isset($_SESSION['id_utilisateur'])) {
+if (!isset($_SESSION['id_user'])) {
     echo json_encode(['status' => 'error', 'message' => 'Utilisateur non connecté']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id_produit']) || !isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['id_items']) || !isset($_POST['action'])) {
     echo json_encode(['status' => 'error', 'message' => 'Requête invalide']);
     exit;
 }
 
-$id_utilisateur = $_SESSION['id_utilisateur'];
-$id_produit = (int)$_POST['id_produit'];
+$id_user = $_SESSION['id_user'];
+$id_items = (int)$_POST['id_items'];
 $action = $_POST['action'];
 
 try {
     $conn->beginTransaction();
 
-    $stmt = $conn->prepare("SELECT quantité FROM panier WHERE id_utilisateur = ? AND id_produit = ?");
-    $stmt->execute([$id_utilisateur, $id_produit]);
+    $stmt = $conn->prepare("SELECT quantité FROM panier WHERE id_user = ? AND id_items = ?");
+    $stmt->execute([$id_user, $id_items]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($result) {
@@ -32,11 +32,11 @@ try {
         }
 
         if ($quantité > 0) {
-            $stmt = $conn->prepare("UPDATE panier SET quantité = ? WHERE id_utilisateur = ? AND id_produit = ?");
-            $stmt->execute([$quantité, $id_utilisateur, $id_produit]);
+            $stmt = $conn->prepare("UPDATE panier SET quantité = ? WHERE id_user = ? AND id_items = ?");
+            $stmt->execute([$quantité, $id_user, $id_items]);
         } else {
-            $stmt = $conn->prepare("DELETE FROM panier WHERE id_utilisateur = ? AND id_produit = ?");
-            $stmt->execute([$id_utilisateur, $id_produit]);
+            $stmt = $conn->prepare("DELETE FROM panier WHERE id_user = ? AND id_items = ?");
+            $stmt->execute([$id_user, $id_items]);
         }
     }
 

@@ -2,8 +2,8 @@
 // Informations de connexion à la base de données
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
-define('DB_PASS', ''); 
-define('DB_NAME', 'ecommerce');
+define('DB_PASS', 'Chim'); 
+define('DB_NAME', 'e_waynell');
 
 // Tentative de connexion à la base de données
 try {
@@ -18,7 +18,7 @@ try {
 
 // Constantes du site
 define('SITE_NAME', 'Mon E-Commerce');
-define('SITE_URL', 'http://localhost/ecommerce'); 
+define('SITE_URL', 'http://localhost/e-commerce-php'); 
 
 // Configuration des sessions
 if (session_status() == PHP_SESSION_NONE) {

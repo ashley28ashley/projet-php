@@ -1,163 +1,180 @@
 <?php 
 require_once '../config/db.php';
 include '../includes/header.php';
-?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Page de checkout pour votre boutique en ligne.">
+if (!isset($_SESSION['id_utilisateur'])) {
+    echo "<p>Veuillez vous connecter pour accéder à votre panier. <a href='login.php'>Se connecter</a></p>";
+    include '../includes/footer.php';
+    exit;
+}
 
-	<!-- Title -->
-	<title>Check Out</title>
+$id_utilisateur = $_SESSION['id_utilisateur'];
 
-	<!-- Favicon -->
-	<link rel="shortcut icon" type="image/png" href="../assets/img/favicon.png">
+// Récupération des produits du panier
+$stmt = $conn->prepare("
+    SELECT p.id as id_item, p.nom, p.prix, p.image, pa.quantité
+    FROM panier pa
+    JOIN items p ON pa.id_item = p.id
+    WHERE pa.id_utilisateur = ?
+");
+$stmt->execute([$id_utilisateur]);
+$produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-	<!-- Google Fonts -->
-	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css?family=Poppins:400,700&display=swap" rel="stylesheet">
-
-	<!-- FontAwesome -->
-	<link rel="stylesheet" href="../assets/css/all.min.css">
-
-	<!-- Bootstrap -->
-	<link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
-
-	<!-- Owl Carousel -->
-	<link rel="stylesheet" href="../assets/css/owl.carousel.css">
-
-	<!-- Magnific Popup -->
-	<link rel="stylesheet" href="../assets/css/magnific-popup.css">
-
-	<!-- Animate CSS -->
-	<link rel="stylesheet" href="../assets/css/animate.css">
-
-	<!-- Mean Menu CSS -->
-	<link rel="stylesheet" href="../assets/css/meanmenu.min.css">
-
-	<!-- Main Style -->
-	<link rel="stylesheet" href="../assets/css/main.css">
-
-	<!-- Responsive -->
-	<link rel="stylesheet" href="../assets/css/responsive.css">
-</head>
-<body>
-
-<?php 
-// Vérifier si le panier est vide
-if (empty($_SESSION['panier'])) {
+// Vérification du panier vide
+if (empty($produits)) {
     echo "<p>Votre panier est vide. <a href='catalogue.php'>Retourner à la boutique</a></p>";
     include '../includes/footer.php';
     exit;
 }
 
-// Récupérer les produits du panier
-$produits = [];
 $total = 0;
-$ids = implode(",", array_keys($_SESSION['panier']));
-$stmt = $conn->query("SELECT * FROM items WHERE id IN ($ids)");
-$produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 foreach ($produits as &$produit) {
-    $id = $produit['id'];
-    $produit['quantite'] = $_SESSION['panier'][$id];
-    $produit['sous_total'] = $produit['quantite'] * $produit['price'];
+    $produit['sous_total'] = $produit['quantité'] * $produit['prix'];
     $total += $produit['sous_total'];
 }
 
-// Traitement du formulaire de commande
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = $_SESSION['user_id'] ?? 0; // Si l'utilisateur est connecté
-    $adresse = trim($_POST['adresse']);
-    $ville = trim($_POST['ville']);
-    $code_postal = trim($_POST['code_postal']);
-    
-    // Insérer la commande
-    $stmt = $conn->prepare("INSERT INTO orders (user_id, status) VALUES (?, 'pending')");
-    $stmt->execute([$user_id]);
-    $order_id = $conn->lastInsertId();
+// Gestion de la soumission du formulaire
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $adresse = $_POST['adresse'];
+    $ville = $_POST['ville'];
+    $code_postal = $_POST['code_postal'];
 
-    // Insérer les produits de la commande
-    $stmt = $conn->prepare("INSERT INTO order_items (order_id, item_id, quantity, price) VALUES (?, ?, ?, ?)");
-    foreach ($produits as $produit) {
-        $stmt->execute([$order_id, $produit['id'], $produit['quantite'], $produit['price']]);
+    try {
+        $conn->beginTransaction();
+
+        // Insertion dans la table invoice
+        $stmt = $conn->prepare("
+            INSERT INTO invoice (id_user, date_transaction, montant, adresse_facturation, ville, code_postal)
+            VALUES (?, NOW(), ?, ?, ?, ?)
+        ");
+        $stmt->execute([$id_utilisateur, $total, $adresse, $ville, $code_postal]);
+        $id_invoice = $conn->lastInsertId();
+
+        // Insertion dans la table orders pour chaque produit
+        foreach ($produits as $produit) {
+            $stmt = $conn->prepare("
+                INSERT INTO orders (id_user, id_item, quantite, date_commande, status)
+                VALUES (?, ?, ?, NOW(), 'pending')
+            ");
+            $stmt->execute([$id_utilisateur, $produit['id_item'], $produit['quantité']]);
+
+            // Mettre à jour le stock (à implémenter si nécessaire)
+            // ...
+
+            // Supprimer du panier
+            $stmt = $conn->prepare("DELETE FROM panier WHERE id_utilisateur = ? AND id_item = ?");
+            $stmt->execute([$id_utilisateur, $produit['id_item']]);
+        }
+
+        $conn->commit();
+        echo "<p class='alert alert-success'>Commande validée avec succès !</p>";
+        // Redirection vers une page de confirmation (à implémenter)
+        // header("Location: confirmation.php");
+        exit;
+
+    } catch (PDOException $e) {
+        $conn->rollBack();
+        echo "<p class='alert alert-danger'>Erreur lors de la validation de la commande : " . htmlspecialchars($e->getMessage()) . "</p>";
     }
-// Mettre à jour le nombre de ventes pour chaque produit
-    $stmt = $conn->prepare("UPDATE items SET sales = sales + ? WHERE id = ?");
-    foreach ($produits as $produit) {
-        $stmt->execute([$produit['quantite'], $produit['id']]);
-    }
-
-    // Insérer la facture
-    $stmt = $conn->prepare("INSERT INTO invoice (order_id, user_id, transaction_date, amount, billing_address, city, postal_code, payment_status) 
-                            VALUES (?, ?, NOW(), ?, ?, ?, ?, 'pending')");
-    $stmt->execute([$order_id, $user_id, $total, $adresse, $ville, $code_postal]);
-
-    // Vider le panier après la commande
-    unset($_SESSION['panier']);
-
-    // Rediriger vers une page de confirmation
-    header("Location: confirmation.php?order_id=" . $order_id);
-    exit;
 }
+
 ?>
 
-<div class="container mt-5">
-    <h2 class="text-center">Validation de la commande</h2>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Validation de la commande</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+        .checkout-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+        .checkout-container h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 2px solid #5e72e4;
+            padding-bottom: 10px;
+        }
+        .table {
+            background-color: #fff;
+        }
+        .table th {
+            background-color: #5e72e4;
+            color: #fff;
+        }
+        .btn-primary {
+            background-color: #5e72e4;
+            border-color: #5e72e4;
+        }
+        .btn-primary:hover {
+            background-color: #4d5bf7;
+            border-color: #4d5bf7;
+        }
+        .form-control {
+            border-radius: 25px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container checkout-container">
+    <h2>Validation de la commande</h2>
     <h3 class="mt-4">Récapitulatif</h3>
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Produit</th>
                 <th>Quantité</th>
+                <th>Prix unitaire</th>
                 <th>Total</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($produits as $produit) : ?>
                 <tr>
-                    <td><?= htmlspecialchars($produit['name']) ?></td>
-                    <td><?= $produit['quantite'] ?></td>
+                    <td><?= htmlspecialchars($produit['nom']) ?></td>
+                    <td><?= $produit['quantité'] ?></td>
+                    <td><?= number_format($produit['prix'], 2) ?> €</td>
                     <td><?= number_format($produit['sous_total'], 2) ?> €</td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
-    <p><strong>Total à payer : <?= number_format($total, 2) ?> €</strong></p>
+    <p class="text-right"><strong>Total à payer : <?= number_format($total, 2) ?> €</strong></p>
 
-    <h3 class="mt-4">Informations de livraison</h3>
+    <h3 class="mt-5">Informations de livraison</h3>
     <form method="post">
-        <div class="mb-3">
+        <div class="form-group">
             <input type="text" class="form-control" name="adresse" placeholder="Adresse de livraison" required>
         </div>
-        <div class="mb-3">
+        <div class="form-group">
             <input type="text" class="form-control" name="ville" placeholder="Ville" required>
         </div>
-        <div class="mb-3">
+        <div class="form-group">
             <input type="text" class="form-control" name="code_postal" placeholder="Code Postal" required>
         </div>
-        <button type="submit" class="btn btn-primary">Confirmer la commande</button>
+        <button type="submit" class="btn btn-primary btn-block">Confirmer la commande</button>
     </form>
 </div>
 
 <?php include '../includes/footer.php'; ?>
 
-<!-- JQuery -->
-<script src="../assets/js/jquery-1.11.3.min.js"></script>
-<!-- Bootstrap -->
-<script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-<!-- Owl Carousel -->
-<script src="../assets/js/owl.carousel.min.js"></script>
-<!-- Magnific Popup -->
-<script src="../assets/js/jquery.magnific-popup.min.js"></script>
-<!-- Mean Menu -->
-<script src="../assets/js/jquery.meanmenu.min.js"></script>
-<!-- Main Script -->
-<script src="../assets/js/main.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 
 </body>
 </html>
