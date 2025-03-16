@@ -1,4 +1,5 @@
-<?php 
+<?php
+session_start();
 require_once '../config/db.php';
 include '../includes/header.php';
 
@@ -12,10 +13,11 @@ $id_utilisateur = $_SESSION['id_utilisateur'];
 
 // Récupération des produits du panier
 $stmt = $conn->prepare("
-    SELECT p.id as id_item, p.nom, p.prix, p.image, pa.quantité
+    SELECT p.id, p.nom, p.prix, p.image, SUM(pa.quantité) AS quantité
     FROM panier pa
     JOIN items p ON pa.id_item = p.id
     WHERE pa.id_utilisateur = ?
+    GROUP BY p.id, p.nom, p.prix, p.image
 ");
 $stmt->execute([$id_utilisateur]);
 $produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -27,17 +29,19 @@ if (empty($produits)) {
     exit;
 }
 
+// Calcul du total (sans référence &)
 $total = 0;
-foreach ($produits as &$produit) {
-    $produit['sous_total'] = $produit['quantité'] * $produit['prix'];
-    $total += $produit['sous_total'];
+foreach ($produits as $index => $produit) {
+    $produits[$index]['sous_total'] = $produit['quantité'] * $produit['prix'];
+    $total += $produits[$index]['sous_total'];
 }
 
 // Gestion de la soumission du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $adresse = $_POST['adresse'];
-    $ville = $_POST['ville'];
-    $code_postal = $_POST['code_postal'];
+    // Sécuriser un minimum
+    $adresse = htmlspecialchars($_POST['adresse']);
+    $ville = htmlspecialchars($_POST['ville']);
+    $code_postal = htmlspecialchars($_POST['code_postal']);
 
     try {
         $conn->beginTransaction();
@@ -56,28 +60,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INSERT INTO orders (id_user, id_item, quantite, date_commande, status)
                 VALUES (?, ?, ?, NOW(), 'pending')
             ");
-            $stmt->execute([$id_utilisateur, $produit['id_item'], $produit['quantité']]);
-
-            // Mettre à jour le stock (à implémenter si nécessaire)
-            // ...
+            // Remplace 'id_item' par 'id'
+            $stmt->execute([$id_utilisateur, $produit['id'], $produit['quantité']]);
 
             // Supprimer du panier
             $stmt = $conn->prepare("DELETE FROM panier WHERE id_utilisateur = ? AND id_item = ?");
-            $stmt->execute([$id_utilisateur, $produit['id_item']]);
+            $stmt->execute([$id_utilisateur, $produit['id']]);
         }
 
         $conn->commit();
         echo "<p class='alert alert-success'>Commande validée avec succès !</p>";
-        // Redirection vers une page de confirmation (à implémenter)
-        // header("Location: confirmation.php");
+        // header("Location: confirmation.php"); // Redirection vers page de confirmation
         exit;
-
     } catch (PDOException $e) {
         $conn->rollBack();
         echo "<p class='alert alert-danger'>Erreur lors de la validation de la commande : " . htmlspecialchars($e->getMessage()) . "</p>";
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -175,6 +174,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-
 </body>
 </html>

@@ -86,10 +86,15 @@ include 'includes/header.php';
             ?>
         </div>
     </section>
+
+
+
+
+
 </main>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="assets/js/panier.js"></script>
+<script src="/projet-php/assets/js/panier.js"></script>
 
 <?php include 'includes/footer.php'; ?>
 

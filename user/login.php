@@ -158,6 +158,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-group">
                 <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
             </div>
+
+            <p >Vous êtes nouveau?<a href="register.php">Créez un compte</a></p>
         </form>
     </div>
 </body>

@@ -66,9 +66,10 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </tr>
         <?php endforeach; ?>
     </table>
-
+à
     <br>
-    <a href="catalogue.php" class="btn">Retourner à la boutique</a>
+    <a href="formulaire_paiement.php" class="btn btn-primary">Passer au paiement</a>
+    <a href="catalogue.php" class="btn btn-secondary">Retourner à la boutique</a>
 </div>
 
 <?php include '../includes/footer.php'; ?>

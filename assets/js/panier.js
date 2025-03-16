@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function ajouterAuPanier(id, name, price, image) {
         console.log("Product ID being sent:", id);
         $.ajax({
-            url: 'pages/ajouter_panier.php',
+            url: '/projet-php/pages/ajouter_panier.php',
             type: 'POST',
             data: { id_item: id },
             dataType: 'json',
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function afficherPanier() {
         $.ajax({
-            url: 'get_cart.php',
+            url: '/projet-php/pages/get_cart.php',
             type: 'GET',
             dataType: 'json',
             success: function(response) {
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
             let action = event.target.classList.contains("ajouter") ? 'add' : 'remove';
 
             $.ajax({
-                url: 'update_cart.php',
+                url: '/projet-php/pages/update_cart.php',
                 type: 'POST',
                 data: { id_item: id, action: action },
                 dataType: 'json',
