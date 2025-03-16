@@ -60,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 INSERT INTO orders (id_user, id_item, quantite, date_commande, status)
                 VALUES (?, ?, ?, NOW(), 'pending')
             ");
-            // Remplace 'id_item' par 'id'
             $stmt->execute([$id_utilisateur, $produit['id'], $produit['quantité']]);
 
             // Supprimer du panier
@@ -69,8 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $conn->commit();
-        echo "<p class='alert alert-success'>Commande validée avec succès !</p>";
-        // header("Location: confirmation.php"); // Redirection vers page de confirmation
+        $_SESSION['commande_confirmee'] = true;
+        $_SESSION['montant_total'] = $total;
+        header("Location: formulaire_paiement.php");
         exit;
     } catch (PDOException $e) {
         $conn->rollBack();

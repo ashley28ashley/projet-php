@@ -11,6 +11,8 @@ include 'includes/header.php';
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -87,6 +89,74 @@ include 'includes/header.php';
         </div>
     </section>
 
+<!-- Section FAQ -->
+<!-- Section FAQ -->
+<!-- Section FAQ -->
+<section class="faq bg-white py-5 mt-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Questions fréquentes</h2>
+        <div class="accordion" id="faqAccordion">
+            <div class="card">
+                <div class="card-header" id="headingOne">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                            <i class="fa fa-chevron-down"></i> Comment passer une commande ?
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#faqAccordion">
+                    <div class="card-body">
+                        Pour passer une commande, parcourez notre catalogue, ajoutez les produits souhaités à votre panier, puis suivez les étapes de validation de commande.
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                           <i class="fa fa-chevron-down"></i> Quels sont les délais de livraison ?
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#faqAccordion">
+                    <div class="card-body">
+                        Les délais de livraison varient généralement entre 3 et 5 jours ouvrés, selon votre localisation et le mode de livraison choisi.
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingThree">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                           <i class="fa fa-chevron-down"></i> Comment retourner un produit ?
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#faqAccordion">
+                    <div class="card-body">
+                        Pour retourner un produit, contactez notre service client dans les 14 jours suivant la réception. Nous vous fournirons les instructions pour le retour.
+                    </div>
+                </div>
+            </div>
+             <div class="card">
+                <div class="card-header" id="headingFour">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                           <i class="fa fa-chevron-down"></i> Comment puis-je savoir si ma commande a bien été validée ?
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#faqAccordion">
+                    <div class="card-body">
+                       Un e-mail de confirmation vous sera envoyé pour toute commande validée.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
 
 
 
@@ -94,6 +164,9 @@ include 'includes/header.php';
 </main>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
 <script src="/projet-php/assets/js/panier.js"></script>
 
 <?php include 'includes/footer.php'; ?>

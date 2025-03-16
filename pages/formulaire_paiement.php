@@ -17,7 +17,7 @@ $montantTotal = isset($_SESSION['montant_total']) ? $_SESSION['montant_total'] :
     <h2>Informations de Paiement</h2>
     <p>Veuillez remplir le formulaire ci-dessous pour finaliser votre commande d'un montant de <?php echo htmlspecialchars($montantTotal); ?> €.</p>
 
-    <form action="traitement_paiement_fictif.php" method="post">
+    <form action="traitement_paiement.php" method="post">
         <div class="form-group">
             <label for="nom_carte">Nom sur la carte :</label>
             <input type="text" class="form-control" id="nom_carte" name="nom_carte" required>
